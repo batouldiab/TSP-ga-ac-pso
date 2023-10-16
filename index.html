@@ -27,6 +27,7 @@
 		
 	var src1= "geneticalgo/index.html?param1="+cities_json;
 	var src2= "ac dynamic cities.html?param1="+cities_json;
+	var src3= "pso cities.html?param1="+cities_json;
 	
 	//var f = document.getElementById('myIframe2');
 	//f.src = src2;
@@ -41,6 +42,7 @@
 	function iframeDidLoad() {
 		top.document.getElementById('myIframe1').setAttribute("src",src1);
 	    top.document.getElementById('myIframe2').setAttribute("src",src2);
+		top.document.getElementById('myIframe3').setAttribute("src",src3);
 	}
 		
 	</script>
@@ -100,7 +102,7 @@
 		  <iframe name="myIframe2" id="myIframe2" id="iframe2"  height="800" width="500" title="iframe"></iframe>
 	  </div>
 	  <div class="rightpane">
-	    <h1>Test Page</h1></div>
+	    <iframe name="myIframe3" id="myIframe3" id="iframe3"  height="800" width="500" title="iframe"></iframe>
 	</div>
 </body>
 </html>

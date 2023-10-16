@@ -1,0 +1,337 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script type="text/javascript">
+  //var tCities = window.prompt("Enter number of cities: ");
+  var tCities = getParamValue("param1");
+  //cities_array = JSON.parse(tCitiescode);
+  // console.log(tCities);
+  var cities_array = JSON.parse(decodeURI(tCities));
+  console.log(cities_array);
+  function getParamValue(paramName) {
+    var url = window.location.search.substring(1); //get rid of "?" in querystring
+    var qArray = url.split("&"); //get key-value pairs
+    for (var i = 0; i < qArray.length; i++) {
+      var pArr = qArray[i].split("="); //split key and value
+      if (pArr[0] == paramName) return pArr[1]; //return value
+    }
+  }
+
+  var Graph = (function () {
+    function Graph() {
+      this._cities = [];
+      this._edges = {};
+      for (var i = 0; i < cities_array.length; i++) {
+        var city = {};
+        var w = cities_array[i].x;
+        var h = cities_array[i].y;
+
+        var cities = this.getCities();
+        for (var cityIndex in cities) {
+          var difference = 0;
+
+          difference += Math.abs(cities[cityIndex].getX() - w);
+          difference += Math.abs(cities[cityIndex].getY() - h);
+        }
+
+        this.addCity(w, h);
+        this.createEdges();
+      }
+    }
+
+    Graph.prototype.getEdges = function () {
+      return this._edges;
+    };
+    Graph.prototype.getEdgeCount = function () {
+      return Object.keys(this._edges).length;
+    };
+
+    Graph.prototype.getCity = function (cityIndex) {
+      return this._cities[cityIndex];
+    };
+
+    Graph.prototype.getCities = function () {
+      return this._cities;
+    };
+
+    Graph.prototype.size = function () {
+      return this._cities.length;
+    };
+
+    Graph.prototype.addCity = function (x, y) {
+      this._cities.push(new City(x, y));
+    };
+
+    Graph.prototype._addEdge = function (cityA, cityB) {
+      this._edges[cityA.toString() + "-" + cityB.toString()] = new Edge(
+        cityA,
+        cityB
+      );
+    };
+
+    Graph.prototype.getEdge = function (cityA, cityB) {
+      if (this._edges[cityA.toString() + "-" + cityB.toString()] != undefined) {
+        return this._edges[cityA.toString() + "-" + cityB.toString()];
+      }
+      if (this._edges[cityB.toString() + "-" + cityA.toString()] != undefined) {
+        return this._edges[cityB.toString() + "-" + cityA.toString()];
+      }
+    };
+
+    Graph.prototype.createEdges = function () {
+      this._edges = {};
+
+      for (var cityIndex = 0; cityIndex < this._cities.length; cityIndex++) {
+        for (
+          var connectionIndex = cityIndex;
+          connectionIndex < this._cities.length;
+          connectionIndex++
+        ) {
+          this._addEdge(this._cities[cityIndex], this._cities[connectionIndex]);
+        }
+      }
+    };
+
+    Graph.prototype.resetPheromone = function () {
+      for (var edgeIndex in this._edges) {
+        this._edges[edgeIndex].resetPheromone();
+      }
+    };
+
+    Graph.prototype.clear = function () {
+      this._cities = [];
+      this._edges = {};
+    };
+
+    return Graph;
+  })();
+
+  var City = (function () {
+    function City(x, y) {
+        this._x = x;
+        this._y = y;
+    }
+
+    City.prototype.getX = function() { return this._x; };
+    City.prototype.getY = function() { return this._y; };
+
+    City.prototype.toString = function() {
+        return this._x + ',' + this._y;
+    };
+
+    City.prototype.isEqual = function(city) {
+        if (this._x == city._x && this._y == city._y) {
+            return true;
+        }
+        return false;
+    };
+
+    return City;
+})();
+
+  var Edge = (function () {
+    function Edge(cityA, cityB) {
+      this._cityA = cityA;
+      this._cityB = cityB;
+      this._initPheromone = 1;
+      this._pheromone = this._initPheromone;
+
+      // Calculate edge distance
+      var deltaXSq = Math.pow(cityA.getX() - cityB.getX(), 2);
+      var deltaYSq = Math.pow(cityA.getY() - cityB.getY(), 2);
+      this._distance = Math.sqrt(deltaXSq + deltaYSq);
+    }
+
+    Edge.prototype.pointA = function () {
+      return { x: this._cityA.getX(), y: this._cityA.getY() };
+    };
+
+    Edge.prototype.pointB = function () {
+      return { x: this._cityB.getX(), y: this._cityB.getY() };
+    };
+
+    Edge.prototype.getPheromone = function () {
+      return this._pheromone;
+    };
+
+    Edge.prototype.getDistance = function () {
+      return this._distance;
+    };
+
+    Edge.prototype.contains = function (city) {
+      if (this._cityA.getX() == city.getX()) {
+        return true;
+      }
+      if (this._cityB.getX() == city.getX()) {
+        return true;
+      }
+      return false;
+    };
+
+    Edge.prototype.setInitialPheromone = function (pheromone) {
+      this._initPheromone = pheromone;
+    };
+
+    Edge.prototype.setPheromone = function (pheromone) {
+      this._pheromone = pheromone;
+    };
+
+    Edge.prototype.resetPheromone = function () {
+      this._pheromone = this._initPheromone;
+    };
+
+    return Edge;
+  })();
+
+  // Particle class for PSO
+  class Particle {
+    constructor(graph) {
+      this._graph = graph;
+      this._position = this._generateRandomTour();
+      this._velocity = this._generateRandomTour();
+      this._personalBest = this._position.slice();
+    }
+
+    _generateRandomTour() {
+      const cities = this._graph.getCities();
+      return cities.slice().sort(() => Math.random() - 0.5);
+    }
+
+    getPosition() {
+      return this._position;
+    }
+
+    getPersonalBest() {
+      return this._personalBest;
+    }
+
+    updatePersonalBest() {
+      const currentDistance = this._calculateTourDistance(this._position);
+      const personalBestDistance = this._calculateTourDistance(
+        this._personalBest
+      );
+
+      if (currentDistance < personalBestDistance) {
+        this._personalBest = this._position.slice();
+      }
+    }
+
+    updateVelocity(globalBest) {
+      const c1 = 2; // PSO parameter (cognitive component)
+      const c2 = 2; // PSO parameter (social component)
+
+      for (let i = 0; i < this._velocity.length; i++) {
+        const r1 = Math.random();
+        const r2 = Math.random();
+
+        const cognitiveComponent =
+          c1 * r1 * (this._personalBest.indexOf(this._position[i]) - i);
+        const socialComponent =
+          c2 * r2 * (globalBest.indexOf(this._position[i]) - i);
+
+        this._velocity[i] = cognitiveComponent + socialComponent;
+      }
+    }
+
+    updatePosition() {
+      for (let i = 0; i < this._position.length; i++) {
+        const newPositionIndex = this._position.indexOf(i) + this._velocity[i];
+        const currentPositionIndex = this._position.indexOf(i);
+
+        // Swap cities in the tour based on velocity
+        if (newPositionIndex >= 0 && newPositionIndex < this._position.length) {
+          this._position[currentPositionIndex] = this._position[
+            newPositionIndex
+          ];
+          this._position[newPositionIndex] = i;
+        }
+      }
+    }
+
+    _calculateTourDistance(tour) {
+      let distance = 0;
+
+      for (let i = 0; i < tour.length; i++) {
+        const fromCity = tour[i];
+        const toCity = i === tour.length - 1 ? tour[0] : tour[i + 1];
+        // console.log(fromCity)
+        // console.log(toCity)
+        const edge = this._graph.getEdge(
+          fromCity,toCity
+        );
+        distance += edge.getDistance();
+      }
+
+      return distance;
+    }
+  }
+
+  // PSO Algorithm for TSP
+  class PSOAlgorithm {
+    constructor(graph, numParticles, maxIterations) {
+      this._graph = graph;
+      this._particles = Array.from(
+        { length: numParticles },
+        () => new Particle(graph)
+      );
+      this._globalBest = this._particles[0].getPosition();
+      this._maxIterations = maxIterations;
+    }
+
+    getGlobalBest() {
+      return this._globalBest;
+    }
+
+    run() {
+      let iteration = 0;
+
+      while (iteration < this._maxIterations) {
+        for (const particle of this._particles) {
+          particle.updatePersonalBest();
+        }
+
+        this._updateGlobalBest();
+
+        for (const particle of this._particles) {
+          particle.updateVelocity(this._globalBest);
+          particle.updatePosition();
+        }
+
+        iteration++;
+      }
+
+      return this._globalBest;
+    }
+
+    _updateGlobalBest() {
+      for (const particle of this._particles) {
+        const particleDistance = particle._calculateTourDistance(
+          particle.getPosition()
+        );
+        const globalBestDistance = particle._calculateTourDistance(
+          this._globalBest
+        );
+
+        if (particleDistance < globalBestDistance) {
+          this._globalBest = particle.getPosition().slice();
+        }
+      }
+    }
+  }
+
+  // Example usage
+  const graph = new Graph();
+  // Initialize graph with cities and edges
+
+  const numParticles = 30; // Number of particles in the swarm
+  const maxIterations = 200; // Maximum iterations for PSO
+
+  const psoAlgorithm = new PSOAlgorithm(graph, numParticles, maxIterations);
+  const bestSolution = psoAlgorithm.run();
+
+  console.log("Best TSP Solution (City Indices):", bestSolution);
+  
+  const formatted_cities_array = cities_array.map(obj => `${obj.x},${obj.y}`);
+  console.log(
+    "Best TSP Solution (City IDs):",
+    bestSolution.map((city) => formatted_cities_array.indexOf(city.toString()))
+  );
+</script>
