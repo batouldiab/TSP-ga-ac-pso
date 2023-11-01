@@ -10,7 +10,7 @@ git clone https://github.com/your-username/tsp-solver-web-app.git
 ```
 
 2. Navigate to the project directory:
-3. ```console
+```console
 cd tsp-solver-web-app
 ```
 
