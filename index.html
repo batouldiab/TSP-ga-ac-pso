@@ -27,18 +27,9 @@
 		
 	var src1= "geneticalgo/index.html?param1="+cities_json;
 	var src2= "ac dynamic cities.html?param1="+cities_json;
-	var src3= "pso cities.html?param1="+cities_json;
+	var src3= "pso/index.html?param1="+cities_json;
 	
-	//var f = document.getElementById('myIframe2');
-	//f.src = src2;
-	//function myFunction2(){
-	//	$('#myIframe2').attr('src', "ac dynamic cities.html?param1="+tCities); 
-	//} 
 
-	//window.onload = function()
-	//{
-	//  document.getElementById("myIframe2").setAttribute("src", src2);
-	//}
 	function iframeDidLoad() {
 		top.document.getElementById('myIframe1').setAttribute("src",src1);
 	    top.document.getElementById('myIframe2').setAttribute("src",src2);
@@ -50,7 +41,7 @@
 	<style>
 		body, html {
 		  width: 100%;
-		  height: 100%;
+		  height: 100 vh;
 		  margin: 0;
 		}
 		

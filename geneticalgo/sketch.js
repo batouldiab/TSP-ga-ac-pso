@@ -70,7 +70,7 @@ function draw() {
   //line( width/3, 0,width/3, height/2);
   line( 0, height/2,width, height/2);
   // Show the best ever!
-  translate(0, height / 2);
+  translate(0, height / 2+5);
   bestEver.show();
   //line( width/3, 0,width/3, height/2);
 

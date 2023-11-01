@@ -2,6 +2,7 @@
 <script type="text/javascript">
 "use strict"
 
+
 //var tCities = window.prompt("Enter number of cities: ");
 var tCities = getParamValue('param1');
 //cities_array = JSON.parse(tCitiescode);
@@ -901,7 +902,7 @@ var Tour = (function () {
 })();
 
 $(document).ready(function(){
-    var antCanvas = new Canvas('#aco-canvas', 400, 300);
+    var antCanvas = new Canvas('#aco-canvas', 300, 300);
     var ac = new AntColony();
     var acArtist = new ACArtist(ac, antCanvas);
 
@@ -933,7 +934,7 @@ $(document).ready(function(){
             'q': $('#pheromone-deposit-weight').val(),
             'minScalingFactor': $('#min-scalar').val(),
         };
-
+        $('#aco-params').css('display', 'none');
         ac.setParams(params);
     }
 
